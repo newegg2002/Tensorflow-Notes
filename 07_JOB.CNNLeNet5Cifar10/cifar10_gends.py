@@ -7,15 +7,12 @@ import numpy as np
 from PIL import Image
 import os
 
-img_train_path = "./mnist_data_jpg/mnist_train_jpg_60000/"
-label_train_path = "./mnist_data_jpg/mnist_train_jpg_60000.txt"
-tfRecord_train = "./data/mnist_train.tfrecords"
+IMG_TRAIN_PATH = "./cifar10_data/train/"
+IMG_TEST_PATH  = "./cifar10_data/test/"
 
-img_test_path = "./mnist_data_jpg/mnist_test_jpg_10000/"
-label_test_path = "./mnist_data_jpg/mnist_test_jpg_10000.txt"
-tfRecord_test = "./data/mnist_test.tfrecords"
-
-data_path = "./data"
+TFR_PATH = "./tfrecords"
+TFRECORD_TRAIN = "cifar10_train.tfr"
+TFRECORD_TEST  = "cifar10_test.tfr"
 
 resize_height = 28
 resize_width  = 28
@@ -44,9 +41,9 @@ def read_tfRecord(tfR_path):
 
 def get_tfRecords(num, isTrain=True):
 	if isTrain:
-		tfR_path = tfRecord_train
+		tfR_path = TFRECORD_TRAIN
 	else:
-		tfR_path = tfRecord_test
+		tfR_path = TFRECORD_TEST
 
 	img, label = read_tfRecord(tfR_path)
 	img_batch, label_batch = tf.train.shuffle_batch(
@@ -59,8 +56,30 @@ def get_tfRecords(num, isTrain=True):
 	return img_batch, label_batch
 
 
+def get_img_files_and_labels_list(img_path):
+	
+	img_files_list = []
+	labels_list = []
 
-def write_tfRecord(tfR_path, img_path, label_path):
+	cat_dirs = os.listdir(img_path)
+
+	for cat in cat_dirs:
+		cat_dir = os.path.join(img_path, cat)
+		if os.path.isdir(cat_dir):
+			files = os.listdir(cat_dir)
+			img_files_list.extend(cat + "/" + file for file in files)
+			labels_list.extend(len(files) * [cat])
+
+	return img_files_list, labels_list
+
+def write_tfRecord(tfR_path, img_path):
+
+	#先遍历img_path，获取所有image和对应label的列表
+	img_files_list, labels_list = get_img_files_and_labels_list(img_path)
+
+	return
+
+	#根据获取到的文件和标签列表，生成tfrecord并写入
 	writer = tf.python_io.TFRecordWriter(tfR_path)
 
     #Get all labels data
@@ -94,14 +113,14 @@ def write_tfRecord(tfR_path, img_path, label_path):
 
 
 def gen_tfRecords():
-	isExists = os.path.exists(data_path)
+	isExists = os.path.exists(TFR_PATH)
 
 	if not isExists:
-		os.mkdir(data_path)
-	print "tfRecord data would be put in " + data_path
+		os.mkdir(TFR_PATH)
+	print "tfRecords data would be put in " + TFR_PATH
 
-	write_tfRecord(tfRecord_train, img_train_path, label_train_path)
-	write_tfRecord(tfRecord_test,  img_test_path,  label_test_path)
+	write_tfRecord(TFRECORD_TRAIN, IMG_TRAIN_PATH)
+	write_tfRecord(TFRECORD_TEST,  IMG_TEST_PATH)
 
 def main():
 	gen_tfRecords()
