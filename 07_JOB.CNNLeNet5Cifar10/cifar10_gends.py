@@ -11,12 +11,11 @@ IMG_TRAIN_PATH = "./cifar10_data/train/"
 IMG_TEST_PATH  = "./cifar10_data/test/"
 
 TFR_PATH = "./tfrecords"
-TFRECORD_TRAIN = "cifar10_train.tfr"
-TFRECORD_TEST  = "cifar10_test.tfr"
+TFRECORD_TRAIN = os.path.join(TFR_PATH, "cifar10_train.tfr")
+TFRECORD_TEST  = os.path.join(TFR_PATH, "cifar10_test.tfr")
 
-resize_height = 28
-resize_width  = 28
-
+CIFAR_CAT2IDX_LUT = {"airplane":0, "automobile":1, "bird":2, "cat":3, "deer":4, 
+                     "dog":5, "frog":6, "horse":7, "ship":8, "truck":9}
 
 def read_tfRecord(tfR_path):
 	filename_q = tf.train.string_input_producer([tfR_path])
@@ -31,8 +30,8 @@ def read_tfRecord(tfR_path):
 		})
 
 	img = tf.decode_raw(features['img_raw'], tf.uint8)
-	img.set_shape([784])
-	img = tf.cast(img, tf.float32) * (1. / 255)
+	img.set_shape([3072])
+	img = tf.cast(img, tf.float32)
 
 	label = tf.cast(features['label'], tf.float32)
 
@@ -61,8 +60,13 @@ def get_img_files_and_labels_list(img_path):
 	img_files_list = []
 	labels_list = []
 
+	#cifar10_data的目录结构为：[test, train]/[airplane, ship, ..., dog]/[batch1_num_xxx.jpg, ...]
+
+	#遍历当前目录，获取category文件夹列表
 	cat_dirs = os.listdir(img_path)
 
+	#针对每个category目录进行遍历，获取所有jpg文件列表。注意因为我们是基于img_path进行访问，所以
+	#文件路径中要加上category。
 	for cat in cat_dirs:
 		cat_dir = os.path.join(img_path, cat)
 		if os.path.isdir(cat_dir):
@@ -77,26 +81,16 @@ def write_tfRecord(tfR_path, img_path):
 	#先遍历img_path，获取所有image和对应label的列表
 	img_files_list, labels_list = get_img_files_and_labels_list(img_path)
 
-	return
-
-	#根据获取到的文件和标签列表，生成tfrecord并写入
 	writer = tf.python_io.TFRecordWriter(tfR_path)
 
-    #Get all labels data
-	fLabel = open(label_path)
-	labels_data = fLabel.readlines()
-	fLabel.close()
-
 	pic_cnt = 0
-	for l in labels_data:
-		val = l.split()
-
-		img_name = img_path + val[0]
+	for (f_img, label) in zip(img_files_list, labels_list):
+		img_name = os.path.join(img_path, f_img)
 		img = Image.open(img_name)
 		img_raw = img.tobytes()
 
 		labels = [0] * 10
-		labels[int(val[1])] = 1
+		labels[CIFAR_CAT2IDX_LUT[label]] = 1
 
 		example = tf.train.Example(
 			features=tf.train.Features(

@@ -1,3 +1,6 @@
 #cifar-10 train & test data
 
 cifar10_data/
+
+#TF records
+tfrecords/
