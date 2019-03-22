@@ -5,14 +5,13 @@
 import tensorflow as tf
 
 #All the 'digit' image is 28 * 28 resolution
-INPUT_NODE =  784
 #0-9
 OUTPUT_NODE = 10
-LAYER1_NODE = 512
+LAYER1_NODE = 1024
 
 #CNN Modification
-IMAGE_XY_RES = 28
-IMAGE_CHANS  = 1
+IMAGE_XY_RES = 32
+IMAGE_CHANS  = 3
 
 CONV1_SIZE = 5
 CONV1_KNELS = 32
