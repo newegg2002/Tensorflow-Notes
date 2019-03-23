@@ -4,10 +4,11 @@
 
 import tensorflow as tf
 
-#All the 'digit' image is 28 * 28 resolution
+#All the 'cifar-10' image is 28 * 28 resolution
 #0-9
 OUTPUT_NODE = 10
-LAYER1_NODE = 1024
+LAYER1_NODE = 120
+LAYER2_NODE = 86
 
 #CNN Modification
 IMAGE_XY_RES = 32
@@ -17,7 +18,7 @@ CONV1_SIZE = 5
 CONV1_KNELS = 32
 
 CONV2_SIZE = 5
-CONV2_KNELS = 64
+CONV2_KNELS = 16
 
 POOLING_SIZE = 2
 POOLING_STEP = 2
@@ -74,11 +75,15 @@ def fw_propagation(x, train, regularizer):
 	b1 = get_bias([LAYER1_NODE])
 	y1 = tf.nn.relu(tf.matmul(reshaped, w1) + b1)
 
-	#执行dropout
-	if train: y1 = tf.nn.dropout(y1, 0.5)
+	w2 = get_weight([LAYER1_NODE, LAYER2_NODE], regularizer)
+	b2 = get_bias([LAYER2_NODE])
+	y2 = tf.nn.relu(tf.matmul(y1, w2) + b2)
 
-	w2 = get_weight([LAYER1_NODE, OUTPUT_NODE], regularizer)
-	b2 = get_bias([OUTPUT_NODE])
-	y = tf.matmul(y1, w2) + b2
+	#执行dropout
+	if train: y2 = tf.nn.dropout(y2, 0.5)
+
+	w3 = get_weight([LAYER2_NODE, OUTPUT_NODE], regularizer)
+	b3 = get_bias([OUTPUT_NODE])
+	y = tf.matmul(y2, w3) + b3
 
 	return y
