@@ -31,7 +31,7 @@ def read_tfRecord(tfR_path):
 
 	img = tf.decode_raw(features['img_raw'], tf.uint8)
 	img.set_shape([3072])
-	img = tf.cast(img, tf.float32)
+	img = tf.cast(img, tf.float32) * (1. / 255)
 
 	label = tf.cast(features['label'], tf.float32)
 

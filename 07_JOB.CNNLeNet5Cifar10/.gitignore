@@ -4,3 +4,6 @@ cifar10_data/
 
 #TF records
 tfrecords/
+
+#We need save the model data here
+!model/
