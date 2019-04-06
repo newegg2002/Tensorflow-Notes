@@ -15,7 +15,7 @@ POOLING_SIZE = 2
 POOLING_STEP = 2
 
 #Print necessary debug message with DEBUG = True.
-DEBUG = True
+DEBUG = False
 
 #TODO:?
 VGG_MEAN = [103.939, 116.799, 123.68]
@@ -32,10 +32,14 @@ class Vgg16(object):
 
 	def fw_propagation(self, images):
 		
-		print "Build model started:"
+		if DEBUG:
+			print "Build model started:"
+
 		start = time.time()
-		rgb_scaled = images * 255.0
-		if DEBUG: print rgb_scaled
+		#vgg16网络直接输入图像原始像素值，不需要转化
+		#rgb_scaled = images * 255.0
+		rgb_scaled = images
+		#if DEBUG: print rgb_scaled
 		red, green, blue = tf.split(rgb_scaled, 3, 3)
 		bgr = tf.concat([blue - VGG_MEAN[0], green - VGG_MEAN[1], red - VGG_MEAN[2]], 3)
 
@@ -53,19 +57,19 @@ class Vgg16(object):
 		self.conv3_1 = self.conv_layer(self.pool2, "conv3_1")
 		self.conv3_2 = self.conv_layer(self.conv3_1, "conv3_2")
 		self.conv3_3 = self.conv_layer(self.conv3_2, "conv3_3")
-		self.pool3   = self.max_pool_2X2(self.conv3_2, "pool3")
+		self.pool3   = self.max_pool_2X2(self.conv3_3, "pool3")
 
 
 		self.conv4_1 = self.conv_layer(self.pool3, "conv4_1")
 		self.conv4_2 = self.conv_layer(self.conv4_1, "conv4_2")
 		self.conv4_3 = self.conv_layer(self.conv4_2, "conv4_3")
-		self.pool4   = self.max_pool_2X2(self.conv4_2, "pool4")
+		self.pool4   = self.max_pool_2X2(self.conv4_3, "pool4")
 
 
 		self.conv5_1 = self.conv_layer(self.pool4, "conv5_1")
 		self.conv5_2 = self.conv_layer(self.conv5_1, "conv5_2")
 		self.conv5_3 = self.conv_layer(self.conv5_2, "conv5_3")
-		self.pool5   = self.max_pool_2X2(self.conv5_2, "pool5")
+		self.pool5   = self.max_pool_2X2(self.conv5_3, "pool5")
 
 
 		#Full-connect layer
@@ -79,7 +83,8 @@ class Vgg16(object):
 		self.prob    = tf.nn.softmax(self.fc8, name="prob")
 
 		end = time.time()
-		print "Build model finished. Building takes %f." %(end - start)
+		if DEBUG:
+			print "Build model finished. Building takes %f." %(end - start)
 
 		#why?
 		self.data_dict = None
@@ -107,7 +112,7 @@ class Vgg16(object):
 	def fc_layer(self, x, name):
 		with tf.variable_scope(name):
 			shape = x.get_shape().as_list()
-			if DEBUG: print x.get_shape()
+			if DEBUG: print name, x.get_shape()
 			dim = 1
 			for i in shape[1:]:
 				dim*=i
